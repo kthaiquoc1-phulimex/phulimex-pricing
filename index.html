@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniPrice Pro - Hệ Thống Tính Giá & P&L Xuất Khẩu Nông Sản Cont 40' RF</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- html2canvas for Exporting Quotation to PNG image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] { -moz-appearance: textfield; }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 9999px; }
+    .locked-input { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; border-color: #e2e8f0; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <!-- Phulimex Logo Badge -->
+        <div class="h-10 px-2.5 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 text-white border border-emerald-400/30">
+          <svg class="w-6 h-6 text-amber-300 fill-current" viewBox="0 0 24 24">
+            <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/>
+          </svg>
+          <span class="font-black text-sm tracking-tighter text-white">PHULIMEX</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold tracking-tight text-white">Tính Giá Xuất Khẩu Cont 40' RF</h1>
+            <span class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-medium">Phulimex Export Engine</span>
+          </div>
+          <p class="text-xs text-slate-400">Tập trung 3 biến số: Giá Mua / Giá Bán / Cước Tàu</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2.5">
+        <!-- Settings Modal Trigger -->
+        <button onclick="openConfigModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg border border-slate-700 text-amber-300 transition shadow-sm">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+          <span>Bảng Tỷ Giá & Giá Thùng</span>
+        </button>
+        <button onclick="openQuoteModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-xs font-bold rounded-lg text-white shadow-sm transition">
+          <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+          <span>Tạo Báo Giá (Quote)</span>
+        </button>
+        <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg border border-slate-700 text-slate-200 transition">
+          <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>In Báo Giá</span>
+        </button>
+        <button onclick="copySummary()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-200 border border-slate-700 transition">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>Sao Chép Tóm Tắt</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- Top Bar: Category & Variant Selector (Gọn gàng 2 tầng) -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+        <div class="flex items-center gap-2">
+          <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Chọn Nhóm Nông Sản & Quy Cách Thị Trường</span>
+        </div>
+        <span class="text-[11px] text-slate-400">Tự động nạp giá thùng carton, quy cách đóng gói và cước định mức</span>
+      </div>
+
+      <!-- Tầng 1: Tabs Danh Mục Chính -->
+      <div class="flex flex-wrap items-center gap-2" id="categoryTabs">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Tầng 2: Các Quy Cách / Thị Trường Con -->
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/60 flex flex-wrap items-center gap-2" id="variantButtons">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- 2 Column Layout: Inputs (Left) and Results Dashboard (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT: Inputs (7 Cols) -->
+      <div class="lg:col-span-7 space-y-5">
+
+        <!-- ⭐ KHU VỰC 3 BIẾN SỐ CHÍNH (Được làm nổi bật cao nhất) -->
+        <div class="bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-blue-500/10 rounded-2xl p-5 shadow-sm border-2 border-emerald-500/30 space-y-4">
+          <div class="flex items-center justify-between border-b border-emerald-900/10 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-sm">★</span>
+              <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wide">
+                3 Biến Số Chính Thay Đổi Hàng Ngày
+              </h2>
+            </div>
+            <span id="calcModeBadge" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200">
+              Nhập nhanh trực tiếp
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <!-- 1. GIÁ MUA VỰA -->
+            <div id="buyPriceWrapper" class="bg-white p-3.5 rounded-xl border-2 border-slate-200 focus-within:border-emerald-500 shadow-sm transition space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                  <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  1. Giá Mua Vựa
+                </label>
+                <span id="buyPriceLockedLabel" class="hidden text-[9px] bg-amber-100 text-amber-800 font-bold px-1 rounded">TỰ ĐỘNG</span>
+              </div>
+              <div class="relative">
+                <input type="number" id="buyPricePerKg" value="21000" class="w-full text-lg font-black text-slate-900 bg-transparent outline-none pr-8">
+                <span class="absolute right-0 top-1 text-xs text-slate-400 font-bold">₫/kg</span>
+              </div>
+              <p class="text-[10px] text-slate-400 pt-0.5 border-t border-slate-100">
+                Tổng: <span id="totalRawMaterialVND" class="font-bold text-slate-700">425,250,000 ₫</span>
+              </p>
+            </div>
+
+            <!-- 2. GIÁ BÁN KHÁCH -->
+            <div id="sellPriceWrapper" class="bg-white p-3.5 rounded-xl border-2 border-slate-200 focus-within:border-blue-500 shadow-sm transition space-y-1">
+              <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                <i data-lucide="circle-dollar-sign" class="w-3.5 h-3.5 text-blue-600"></i>
+                2. Giá Bán Khách
+              </label>
+              <div class="relative">
+                <input type="number" step="0.1" id="sellPricePerBox" value="10.8" class="w-full text-lg font-black text-blue-600 bg-transparent outline-none pr-10">
+                <span class="absolute right-0 top-1 text-xs text-slate-400 font-bold">$/thùng</span>
+              </div>
+              <p class="text-[10px] text-slate-400 pt-0.5 border-t border-slate-100">
+                Thu về: <span id="totalRevenueUSD" class="font-bold text-slate-700">$24,300</span>
+              </p>
+            </div>
+
+            <!-- 3. CƯỚC BIỂN QUỐC TẾ -->
+            <div class="bg-white p-3.5 rounded-xl border-2 border-slate-200 focus-within:border-rose-500 shadow-sm transition space-y-1">
+              <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                <i data-lucide="ship" class="w-3.5 h-3.5 text-rose-500"></i>
+                3. Cước Tàu Cont RF
+              </label>
+              <div class="relative">
+                <input type="number" id="costOceanFreight" value="2700" class="w-full text-lg font-black text-rose-600 bg-transparent outline-none pr-8">
+                <span class="absolute right-0 top-1 text-xs text-slate-400 font-bold">USD</span>
+              </div>
+              <p class="text-[10px] text-slate-400 pt-0.5 border-t border-slate-100">
+                Quy đổi: <span id="subtotalGroupDVND" class="font-bold text-slate-700">71,010,000 ₫</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Target Margin Slider (Chỉ hiện khi bật Tính Ngược) -->
+          <div id="reverseMarginControl" class="hidden bg-blue-50/80 p-3.5 rounded-xl border border-blue-200 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-blue-900">Mục tiêu Biên Lợi Nhuận Gộp (% Margin kỳ vọng):</span>
+              <span id="targetMarginValueDisplay" class="font-black text-sm text-blue-700">8.37%</span>
+            </div>
+            <input type="range" id="targetMarginRange" min="2" max="30" step="0.5" value="8.4" class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            <p class="text-[11px] text-blue-700 italic">Hệ thống sẽ giữ cố định Giá Bán và Cước Tàu để giải ngược ra Giá Mua Vựa tối đa.</p>
+          </div>
+        </div>
+
+        <!-- Thông Tin Đóng Gói Lô Hàng -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+              <span class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-black">!</span>
+              Quy Cách Đóng Cont 40' RF
+            </h2>
+            <div class="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>Đang áp giá thùng:</span>
+              <span id="activeBoxPriceBadge" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">19,764 ₫/thùng</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs">
+            <div>
+              <label class="block font-medium text-slate-600 mb-1">Tên Hàng / INV</label>
+              <input type="text" id="itemName" value="Thanh Long Ấn Độ" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-800 outline-none">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-600 mb-1">Số Thùng / Cont</label>
+              <input type="number" id="numBoxes" value="2250" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-800 outline-none">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-600 mb-1">Số Kg / Thùng</label>
+              <input type="number" step="0.5" id="kgPerBox" value="9" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-800 outline-none">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-600 mb-1">Tổng Kg Hàng</label>
+              <div id="totalKgDisplay" class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-700 flex items-center justify-between">
+                <span>20,250</span><span class="text-[10px] text-slate-400">KG</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🔒 KHU VỰC CÁC CHI PHÍ ĐÃ KHÓA CỐ ĐỊNH (READ-ONLY) -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-black">
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-500"></i>
+              </span>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                Chi Phí Làm Hàng & Thủ Tục (Đã Khóa Cố Định)
+              </h2>
+            </div>
+            <button onclick="toggleCostDetails()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
+              <span id="costToggleText">Xem Chi Tiết</span>
+              <i data-lucide="chevron-down" id="costToggleIcon" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-500">
+            Các khoản phí này được thiết lập chuẩn theo định mức cont 40' của công ty và chỉ đọc (không bị vô tình chỉnh sửa khi thao tác báo giá).
+          </p>
+
+          <!-- Bảng tóm tắt nhanh chi phí cố định -->
+          <div class="grid grid-cols-3 gap-2.5 text-xs text-center">
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 block uppercase font-bold">Văn Phòng & In Thùng</span>
+              <span id="subtotalGroupAVND" class="font-extrabold text-slate-700 text-xs">47,099,000 ₫</span>
+            </div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 block uppercase font-bold">Local Charges Hãng Tàu</span>
+              <span id="subtotalGroupBVND" class="font-extrabold text-slate-700 text-xs">9,757,910 ₫</span>
+            </div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 block uppercase font-bold">Hải Quan & Nội Địa</span>
+              <span id="subtotalGroupCVND" class="font-extrabold text-slate-700 text-xs">20,911,001 ₫</span>
+            </div>
+          </div>
+
+          <!-- Chi tiết từng khoản phí (ẩn mặc định) -->
+          <div id="costDetailsBody" class="space-y-4 text-xs hidden pt-2">
+            
+            <!-- Group A: Văn phòng & In thùng carton -->
+            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-700 block mb-2">Phí Văn Phòng & Thùng (Nhóm A)</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-slate-400 mb-1">Giá In Thùng (₫/thùng)</label>
+                  <input type="number" id="costBoxPrice" value="19764" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Phí Gửi C/T (USD)</label>
+                  <input type="number" id="costDhl" value="50" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Phí Ngân Hàng (USD)</label>
+                  <input type="number" id="costBank" value="50" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Pallet / Khác (₫)</label>
+                  <input type="number" id="costPallet" value="0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Group B: Local Charges Hãng Tàu (1.08 VAT) -->
+            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-700 block mb-2">BSL Chứng Từ Hãng Tàu (Nhóm B - VAT 8%)</span>
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div>
+                  <label class="block text-slate-400 mb-1">SEAL ($)</label>
+                  <input type="number" step="0.01" id="costSeal" value="9.45" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">THC ($)</label>
+                  <input type="number" step="0.01" id="costThc" value="260.77" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">B/L ($)</label>
+                  <input type="number" step="0.01" id="costBl" value="41.57" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">TELEX ($)</label>
+                  <input type="number" step="0.01" id="costTelex" value="31.75" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">PTI / Điện ($)</label>
+                  <input type="number" step="0.01" id="costElectricity" value="0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Group C: Logistics nội địa & Hải quan -->
+            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200">
+              <span class="font-bold text-slate-700 block mb-2">Hải Quan & Vận Tải Nội Địa (Nhóm C)</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-slate-400 mb-1">TTHQ ($)</label>
+                  <input type="number" id="costCustoms" value="50" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Nâng Hạ ($)</label>
+                  <input type="number" id="costLift" value="180" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Trucking Kéo Xe ($)</label>
+                  <input type="number" id="costTrucking" value="450" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Chi Line ($)</label>
+                  <input type="number" id="costChiLine" value="0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">KDTV (₫)</label>
+                  <input type="number" id="costKdtv" value="1151000" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Bảo Hiểm (₫)</label>
+                  <input type="number" id="costInsurance" value="445281" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Kho Lạnh / Lưu Bãi (₫)</label>
+                  <input type="number" id="costColdStorage" value="0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Credit Note Giảm ($)</label>
+                  <input type="number" id="creditNoteUSD" value="0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tham số tài chính & hoa hồng cố định -->
+            <div class="p-3 bg-purple-50/50 rounded-xl border border-purple-200">
+              <span class="font-bold text-purple-900 block mb-2">Chính Sách Hoa Hồng & Chi Phí Vốn (Định Mức Cố Định)</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-slate-400 mb-1">Lãi Vay NH (%/năm)</label>
+                  <input type="number" id="interestRateYear" value="5.0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                  <span class="text-[10px] text-slate-400">5%/12 tháng</span>
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Hoa Hồng Sale (%)</label>
+                  <input type="number" id="commissionSaleRate" value="10.0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                  <span class="text-[10px] text-slate-400">10% LN còn lại</span>
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Hoa Hồng Thu Mua (%)</label>
+                  <input type="number" id="commissionProcureRate" value="3.0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                  <span class="text-[10px] text-slate-400">3% LN còn lại</span>
+                </div>
+                <div>
+                  <label class="block text-slate-400 mb-1">Sale Góp Vốn (₫)</label>
+                  <input type="number" id="saleCapitalContribution" value="0" readonly class="w-full px-2.5 py-1.5 rounded-md font-semibold locked-input">
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Results & P&L Dashboard (5 Cols) -->
+      <div class="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
+
+        <!-- Top Profit Card -->
+        <div class="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-900/10 border border-slate-800 space-y-5 relative overflow-hidden">
+          <div class="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-emerald-500/10 blur-2xl"></div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+              <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i>
+              Lợi Nhuận Trước Trừ Hoa Hồng (Sale & Thu Mua)
+            </span>
+            <span id="profitMarginBadge" class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              Margin: 8.37%
+            </span>
+          </div>
+
+          <div>
+            <div class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white flex items-baseline gap-2">
+              <span id="finalProfitVND">45,660,306</span>
+              <span class="text-base font-normal text-emerald-400">₫</span>
+            </div>
+            <div class="text-sm text-slate-400 mt-1 flex items-center gap-2">
+              <span>Quy đổi USD:</span>
+              <span id="finalProfitUSD" class="font-bold text-white text-sm">$1,783.61</span>
+              <span class="text-xs text-slate-400">(theo tỷ giá thu)</span>
+            </div>
+            <div class="text-[11px] text-emerald-400/90 font-medium mt-1.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between">
+              <span>Sau trừ HH Sale & Thu mua (Cty thực nhận):</span>
+              <span id="afterCommissionVND" class="font-bold text-white">39,724,466 ₫</span>
+            </div>
+          </div>
+
+          <!-- Mini Stats Grid -->
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800 text-xs">
+            <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/40">
+              <span class="text-slate-400 block mb-0.5">Tổng Vốn Đầu Vào:</span>
+              <span id="totalInputCostVND" class="font-bold text-slate-100 text-sm">574,027,911 ₫</span>
+            </div>
+            <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/40">
+              <span class="text-slate-400 block mb-0.5">Doanh Thu Thu Về:</span>
+              <span id="fobPriceVND" class="font-bold text-emerald-400 text-sm">622,080,000 ₫</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed P&L Waterfall Table -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2.5 flex items-center justify-between">
+            <span>Bảng Kê P&L Chi Tiết Hồ Sơ Lô Hàng</span>
+            <span class="text-[11px] font-normal text-slate-400">Cont 40' RF</span>
+          </h3>
+
+          <div class="divide-y divide-slate-100 text-xs space-y-0.5">
+            <div class="flex justify-between py-2">
+              <span class="text-slate-500">1. Tiền mua hàng tại vựa</span>
+              <span id="rowRawMaterial" class="font-semibold text-slate-800">425,250,000 ₫</span>
+            </div>
+            <div class="flex justify-between py-2">
+              <span class="text-slate-500">2. Tổng CP làm hàng & cont</span>
+              <span id="rowOpsCost" class="font-semibold text-slate-800">148,777,911 ₫</span>
+            </div>
+            <div class="flex justify-between py-2 bg-slate-50 px-2 rounded-lg font-bold text-slate-900">
+              <span>3. TỔNG VỐN ĐẦU VÀO</span>
+              <span id="rowTotalCost">574,027,911 ₫</span>
+            </div>
+            <div class="flex justify-between py-2 bg-emerald-50/50 px-2 rounded-lg font-bold text-emerald-800">
+              <span>4. DOANH THU THỰC THU</span>
+              <span id="rowRevenue">622,080,000 ₫</span>
+            </div>
+            <div class="flex justify-between py-2">
+              <span class="text-slate-500">5. Lợi nhuận gộp (4 - 3)</span>
+              <span id="rowGrossProfit" class="font-bold text-slate-800">48,052,089 ₫</span>
+            </div>
+            <div class="flex justify-between py-2 text-rose-600">
+              <span>6. Lãi vay NH (5%/12 tháng)</span>
+              <span id="rowBankInterest" class="font-semibold">-2,391,783 ₫</span>
+            </div>
+            <div class="flex justify-between py-2 font-bold text-slate-800">
+              <span>7. Lợi nhuận còn lại (5 - 6)</span>
+              <span id="rowRemainingProfit">45,660,306 ₫</span>
+            </div>
+            <div class="flex justify-between py-2 text-amber-600">
+              <span>8. Hoa hồng Sale (10%)</span>
+              <span id="rowCommissionSale" class="font-semibold">-4,566,031 ₫</span>
+            </div>
+            <div class="flex justify-between py-2 text-amber-600">
+              <span>9. Hoa hồng Thu Mua (3%)</span>
+              <span id="rowCommissionProcure" class="font-semibold">-1,369,809 ₫</span>
+            </div>
+            <div id="rowSaleInvestRow" class="flex justify-between py-2 text-indigo-600 hidden">
+              <span>10. Lợi nhuận Sale Góp Vốn</span>
+              <span id="rowSaleInvestVal" class="font-semibold">0 ₫</span>
+            </div>
+            <div class="flex justify-between py-2.5 bg-emerald-600 text-white font-black px-3 rounded-xl text-sm mt-2 shadow-sm">
+              <span>11. LỢI NHUẬN CÔNG TY (87%)</span>
+              <span id="rowFinalNetProfit">39,724,466 ₫</span>
+            </div>
+          </div>
+
+          <!-- Nút kích hoạt Báo Giá Nhanh -->
+          <div class="pt-2">
+            <button onclick="openQuoteModal()" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition transform active:scale-[0.99]">
+              <i data-lucide="image" class="w-4 h-4"></i>
+              <span>Xem Bảng Báo Giá & Xuất Ảnh Gửi Khách</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cost Composition Chart -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide">Cơ Cấu Chi Phí & Lợi Nhuận</h3>
+            <span class="text-[11px] text-slate-400">Tỷ trọng %</span>
+          </div>
+          <div class="relative h-56 flex items-center justify-center">
+            <canvas id="costBreakdownChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ⚙️ MODAL CẤU HÌNH BIẾN SỐ ĐỊNH KỲ (TỶ GIÁ & GIÁ THÙNG) -->
+  <div id="configModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="sliders-horizontal" class="w-5 h-5 text-amber-400"></i>
+          <div>
+            <h3 class="text-sm font-bold">Cấu Hình Tỷ Giá & Biểu Giá Thùng Carton</h3>
+            <p class="text-[11px] text-slate-400">Các biến số thay đổi định kỳ (tuần/tháng/theo lô)</p>
+          </div>
+        </div>
+        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
+        
+        <!-- Phân mục 1: Tỷ Giá Kép -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            1. Quản Trị Tỷ Giá Kép (USD/VND)
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-200">
+              <label class="block text-xs font-bold text-emerald-900 mb-1">Tỷ Giá USD Bán (Thu Doanh Thu)</label>
+              <div class="relative">
+                <input type="number" id="rateSell" value="25600" class="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg font-bold text-emerald-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                <span class="absolute right-3 top-2 text-xs text-emerald-600 font-semibold">VND</span>
+              </div>
+              <p class="text-[10px] text-emerald-700 mt-1">Dùng quy đổi doanh thu thu về từ khách</p>
+            </div>
+
+            <div class="p-3 bg-rose-50/50 rounded-xl border border-rose-200">
+              <label class="block text-xs font-bold text-rose-900 mb-1">Tỷ Giá USD Chi Phí (Trả Hãng Tàu)</label>
+              <div class="relative">
+                <input type="number" id="rateCost" value="26300" class="w-full px-3 py-2 bg-white border border-rose-300 rounded-lg font-bold text-rose-800 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20">
+                <span class="absolute right-3 top-2 text-xs text-rose-600 font-semibold">VND</span>
+              </div>
+              <p class="text-[10px] text-rose-700 mt-1">Dùng quy đổi cước tàu & local charges</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phân mục 2: Bảng Giá Thùng Carton (Từ file Excel 'Giá Thùng') -->
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+              2. Biểu Giá Thùng Carton (Bảng Phụ Lục Giá Thùng)
+            </h4>
+            <span class="text-[11px] text-slate-400">Click để áp dụng ngay vào lô hàng</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="boxPriceTable">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+        <span class="text-xs text-slate-500">Tự động áp dụng và tính lại ngay khi đóng</span>
+        <button onclick="closeConfigModal()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition">
+          Lưu & Đóng Bảng Cấu Hình
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📄 MODAL XEM & XUẤT ẢNH BÁO GIÁ QUỐC TẾ (OFFICIAL QUOTATION) -->
+  <div id="quoteModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Action Header -->
+      <div class="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/30">
+            PDF
+          </div>
+          <div>
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Phiếu Báo Giá Xuất Khẩu (Official Quotation)</h3>
+            <p class="text-[10px] text-slate-400">Đã chốt giá và sẵn sàng xuất file ảnh gửi khách hàng</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Logo upload trigger -->
+          <label class="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700">
+            <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Đổi Logo Của Bạn</span>
+            <input type="file" id="logoUploadInput" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+          </label>
+          <button id="downloadImageBtn" onclick="exportQuotationImage()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span id="btnExportText">Tải Ảnh PNG Gửi Khách</span>
+          </button>
+          <button onclick="closeQuoteModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Preview Area -->
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-100 flex justify-center">
+        
+        <!-- ⭐ KHUNG BÁO GIÁ SẼ ĐƯỢC CHỤP THÀNH ẢNH (CANVAS CAPTURE TARGET) -->
+        <div id="quotationCard" class="w-full max-w-2xl bg-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-200/90 text-slate-800 space-y-6 relative overflow-hidden">
+          
+          <!-- Top Accent Line -->
+          <div class="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-emerald-700 via-emerald-500 to-teal-400"></div>
+
+          <!-- Quote Header: Company info with Phulimex Logo & Document Title -->
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-100 pb-5 pt-2">
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <!-- Phulimex Logo Container with Image & Fallback -->
+                <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-md border border-slate-200 overflow-hidden relative group p-1">
+                  <img id="quoteLogoImg" src="https://www.phulimex.com/images/logo.png" alt="Phulimex Logo" class="max-w-full max-h-full object-contain" onerror="handleLogoError(this)">
+                  <div id="quoteLogoFallback" class="hidden absolute inset-0 bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-600 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-amber-300 fill-current drop-shadow-sm" viewBox="0 0 24 24">
+                      <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex items-baseline gap-1.5">
+                    <span class="text-xl font-black tracking-tight text-emerald-900 font-sans">PHULIMEX</span>
+                    <span class="text-xs font-extrabold text-amber-600 tracking-wider">CO., LTD</span>
+                  </div>
+                  <h2 class="text-[11px] font-bold text-slate-700 uppercase tracking-wide">PHULIMEX IMPORT EXPORT COMPANY LIMITED</h2>
+                  <p class="text-[10px] text-emerald-700 font-semibold">Premium Tropical Fresh Fruits & Agricultural Produce • Vietnam Origin</p>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-500 leading-tight">
+                Head Office: 1/11/76 Dang Thuy Tram Str, Binh Loi Trung Ward, Ho Chi Minh City, Vietnam<br>
+                Website: <span class="text-emerald-700 font-semibold">www.phulimex.com</span> | Email: <span class="text-slate-700 font-semibold">info@phulimex.com</span> | Hotline: <span class="text-slate-700 font-semibold">+84 915 212 146</span>
+              </p>
+            </div>
+
+            <div class="text-left sm:text-right shrink-0">
+              <span class="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 block sm:inline-block shadow-xs">OFFICIAL QUOTATION</span>
+              <div class="text-xs text-slate-500 mt-2 space-y-0.5">
+                <p>Ref No: <span id="quoteRefNo" class="font-bold text-slate-800">PLX-2026-001</span></p>
+                <p>Date: <span id="quoteDate" class="font-medium text-slate-700">Nov 05, 2026</span></p>
+                <p>Validity: <span class="font-semibold text-rose-600">03 Days from issue</span></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer & Commodity Details Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/80 p-4 rounded-xl border border-slate-200/70">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">PROPOSED TO (QUÝ KHÁCH HÀNG):</span>
+              <p class="font-bold text-slate-900 text-sm" id="quoteCustomerName">Valued Client / Import Department</p>
+              <p class="text-slate-500 mt-0.5">Destination: <span id="quoteDestination" class="font-semibold text-slate-800">Main Seaport (C&F / FOB)</span></p>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">SHIPMENT SPECIFICATION:</span>
+              <p class="text-slate-700 font-medium">Container Type: <span class="font-bold text-slate-900" id="quoteContType">1 x 40' High Cube Reefer (RF)</span></p>
+              <p class="text-slate-700 font-medium">Temperature: <span class="font-bold text-slate-900" id="quoteTempCondition">+3°C to +5°C, Ventilation 15 CBM</span></p>
+            </div>
+          </div>
+
+          <!-- Main Pricing Table -->
+          <div class="space-y-2">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-900 text-white rounded-lg uppercase tracking-wider text-[10px]">
+                    <th class="py-2.5 px-3 rounded-l-lg font-bold">Item & Description</th>
+                    <th class="py-2.5 px-2 text-center font-bold">Packing</th>
+                    <th class="py-2.5 px-2 text-center font-bold">Quantity</th>
+                    <th class="py-2.5 px-2 text-center font-bold">Total Net Wt</th>
+                    <th class="py-2.5 px-3 text-right rounded-r-lg font-bold">Unit Price</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                  <tr class="font-medium">
+                    <td class="py-3 px-3">
+                      <div class="font-bold text-slate-900 text-sm" id="quoteItemTitle">Thanh Long Ấn Độ (Dragon Fruit)</div>
+                      <div class="text-[11px] text-slate-400" id="quoteItemSubDesc">Class 1, Freshly Harvested, Wash & Ozone Treated</div>
+                    </td>
+                    <td class="py-3 px-2 text-center font-semibold" id="quotePackaging">Carton 9.0 kg</td>
+                    <td class="py-3 px-2 text-center font-bold text-slate-900" id="quoteBoxes">2,250 boxes</td>
+                    <td class="py-3 px-2 text-center font-semibold" id="quoteNetWeight">20,250 kg</td>
+                    <td class="py-3 px-3 text-right font-black text-emerald-700 text-base" id="quoteUnitPrice">$10.80 / box</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Total Price Summary Box -->
+            <div class="flex justify-end pt-2">
+              <div class="w-full sm:w-72 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 p-3.5 rounded-xl border border-emerald-500/30 text-xs space-y-1.5">
+                <div class="flex justify-between text-slate-600">
+                  <span>Incoterms Delivery:</span>
+                  <span id="quoteIncoterm" class="font-bold text-slate-900">CNF / CIF Port</span>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                  <span>Ocean Freight Included:</span>
+                  <span id="quoteFreightDisplay" class="font-bold text-slate-900">$2,700.00</span>
+                </div>
+                <div class="flex justify-between items-baseline pt-2 border-t border-emerald-500/20 text-emerald-950 font-black">
+                  <span class="text-xs uppercase">TOTAL CONTRACT AMOUNT:</span>
+                  <span class="text-base text-emerald-700" id="quoteGrandTotal">$24,300.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commercial Terms & Conditions -->
+          <div class="border-t border-slate-100 pt-3 text-[11px] text-slate-500 space-y-1">
+            <span class="font-bold text-slate-700 uppercase tracking-wide text-[10px] block mb-1">Standard Commercial Terms:</span>
+            <ul class="list-disc list-inside space-y-0.5">
+              <li>Payment Term: <span class="font-semibold text-slate-700">30% T/T Deposit upon Order Confirmation, 70% against copy of B/L</span>.</li>
+              <li>Quality Standard: <span class="font-semibold text-slate-700">Export standard, Phytosanitary & Certificate of Origin (Form B/AI/AK) provided</span>.</li>
+              <li>Estimated Lead Time: <span class="font-semibold text-slate-700">3 - 5 days after deposit confirmation</span>.</li>
+            </ul>
+          </div>
+
+          <!-- Signature / Stamp Area -->
+          <div class="flex items-center justify-between border-t border-slate-100 pt-4 text-xs">
+            <div>
+              <p class="font-bold text-slate-800">Confirmed & Accepted by Buyer</p>
+              <p class="text-[10px] text-slate-400 mt-9">(Authorized Signature & Stamp)</p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-slate-900">PHULIMEX CO., LTD</p>
+              <p class="text-[10px] text-slate-500">Export Sales Division</p>
+              <div class="mt-2 inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-200 shadow-xs">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>VERIFIED & APPROVED FOR SHIPMENT</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3 bg-white border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+        <span>Ảnh xuất ra ở định dạng PNG độ nét cao, tương thích trực tiếp gửi qua Zalo / WhatsApp / Email.</span>
+        <button onclick="closeQuoteModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition">
+          Đóng
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl border border-slate-700 transform translate-y-20 opacity-0 transition duration-300 flex items-center gap-2 pointer-events-none">
+    <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toastMsg">Đã sao chép vào clipboard!</span>
+  </div>
+
+  <script>
+    // --- 1. Master Data: Biểu Giá Thùng từ sheet 'Giá Thùng' của 1. Sea Price.xlsx ---
+    const BOX_PRICE_CATALOG = [
+      { name: 'Thanh Long 9kg (Ấn Độ)', price: 19764, defaultFor: 'DF-India' },
+      { name: 'Thanh Long 4kg (Dubai/UAE)', price: 16902, defaultFor: 'DF-DB' },
+      { name: 'Thanh Long 15kg - 16kg (Hongkong)', price: 31860, defaultFor: 'DF-HK' },
+      { name: 'Thanh Long 16kg (Mẫu 2)', price: 32497, defaultFor: null },
+      { name: 'Chanh Seedless Malay (10kg)', price: 8802, defaultFor: 'Chanh-Malay' },
+      { name: 'Chanh Seedless 4.5kg', price: 9310, defaultFor: 'Chanh-4.5' },
+      { name: 'Chanh Seedless 8kg', price: 11988, defaultFor: 'Chanh-4Kg' },
+      { name: 'Chuối Xuất Khẩu (13kg)', price: 19440, defaultFor: 'Banana' },
+      { name: 'Dừa Kim Cương Diamond (9kg)', price: 13000, defaultFor: 'Diamond' },
+      { name: 'Dừa Nắp Khoen Easy Open', price: 14500, defaultFor: 'Open-easy' },
+      { name: 'Dừa Khô Semi-Husk (25kg)', price: 6500, defaultFor: 'Semi-Husk' }
+    ];
+
+    // --- 2. Cấu Trúc Danh Mục 2 Tầng (Category & Variants) ---
+    const CATEGORIES = [
+      { id: 'thanh-long', name: 'Thanh Long', icon: '🐉', count: 4 },
+      { id: 'chanh', name: 'Chanh Không Hạt', icon: '🍋', count: 4 },
+      { id: 'dua', name: 'Dừa Bến Tre', icon: '🥥', count: 3 },
+      { id: 'khac', name: 'Chuối & Khác', icon: '🍌', count: 1 }
+    ];
+
+    // --- 3. Presets chi tiết theo từng danh mục ---
+    const PRESETS = {
+      // Nhóm Thanh Long
+      'DF-India': {
+        cat: 'thanh-long',
+        variantLabel: 'Ấn Độ (9kg)',
+        title: 'Thanh Long Ấn Độ (9kg)',
+        itemName: 'Thanh Long Ấn Độ',
+        numBoxes: 2250,
+        kgPerBox: 9,
+        rateSell: 25600,
+        rateCost: 26300,
+        buyPricePerKg: 21000,
+        sellPricePerBox: 10.8,
+        costBoxPrice: 19764,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 2700,
+        creditNoteUSD: 0
+      },
+      'DF-HK': {
+        cat: 'thanh-long',
+        variantLabel: 'Hồng Kông (15kg)',
+        title: 'Thanh Long HK (15kg)',
+        itemName: 'Thanh Long Hongkong',
+        numBoxes: 1250,
+        kgPerBox: 15,
+        rateSell: 25800,
+        rateCost: 26300,
+        buyPricePerKg: 9000,
+        sellPricePerBox: 14.0,
+        costBoxPrice: 31860,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 10,
+        costThc: 270,
+        costBl: 40,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 600,
+        creditNoteUSD: 0
+      },
+      'DF-DB': {
+        cat: 'thanh-long',
+        variantLabel: 'UAE Rời (4kg)',
+        title: 'Thanh Long UAE (4kg)',
+        itemName: 'Thanh Long UAE',
+        numBoxes: 3980,
+        kgPerBox: 4,
+        rateSell: 26000,
+        rateCost: 26600,
+        buyPricePerKg: 16000,
+        sellPricePerBox: 7.0,
+        costBoxPrice: 16902,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 132.22,
+        costTrucking: 354.57,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 11000,
+        creditNoteUSD: 0
+      },
+      'DF-Pallet': {
+        cat: 'thanh-long',
+        variantLabel: 'UAE Pallet (4kg)',
+        title: 'Thanh Long Pallet (4kg)',
+        itemName: 'Thanh Long UAE Pallet',
+        numBoxes: 3540,
+        kgPerBox: 4,
+        rateSell: 26000,
+        rateCost: 26600,
+        buyPricePerKg: 10000,
+        sellPricePerBox: 5.4,
+        costBoxPrice: 16902,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 132.22,
+        costTrucking: 354.57,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 8100,
+        creditNoteUSD: 0
+      },
+
+      // Nhóm Chanh
+      'Chanh-Malay': {
+        cat: 'chanh',
+        variantLabel: 'Chanh Malay (10kg)',
+        title: 'Chanh Malay (10kg)',
+        itemName: 'Chanh Seedless Malay',
+        numBoxes: 2000,
+        kgPerBox: 10,
+        rateSell: 26150,
+        rateCost: 26600,
+        buyPricePerKg: 10500,
+        sellPricePerBox: 6.0,
+        costBoxPrice: 8802,
+        costDhl: 62,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 10.47,
+        costThc: 249.31,
+        costBl: 39.31,
+        costTelex: 12.88,
+        costElectricity: 0,
+        costCustoms: 17.12,
+        costLift: 124.54,
+        costTrucking: 178.78,
+        costChiLine: 0,
+        costKdtv: 2351000,
+        costInsurance: 0,
+        costColdStorage: 3878812,
+        costOceanFreight: 605,
+        creditNoteUSD: 0
+      },
+      'Chanh-4Kg': {
+        cat: 'chanh',
+        variantLabel: 'Chanh Thùng (8kg)',
+        title: 'Chanh 8kg (4Kg/cont)',
+        itemName: 'Chanh Seedless 8kg',
+        numBoxes: 3300,
+        kgPerBox: 8,
+        rateSell: 25750,
+        rateCost: 26300,
+        buyPricePerKg: 17000,
+        sellPricePerBox: 9.5,
+        costBoxPrice: 11988,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 6500,
+        creditNoteUSD: 0
+      },
+      'Chanh-4.5': {
+        cat: 'chanh',
+        variantLabel: 'Chanh (4.3kg)',
+        title: 'Chanh Không Hạt (4.3kg)',
+        itemName: 'Chanh Seedless 4.3kg',
+        numBoxes: 6200,
+        kgPerBox: 4.3,
+        rateSell: 25670,
+        rateCost: 26300,
+        buyPricePerKg: 14000,
+        sellPricePerBox: 5.3,
+        costBoxPrice: 9310,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 12700,
+        creditNoteUSD: 0
+      },
+      'Chanh-Pallet': {
+        cat: 'chanh',
+        variantLabel: 'Chanh Pallet (4.5kg)',
+        title: 'Chanh Không Hạt Pallet (4.5kg)',
+        itemName: 'Chanh Pallet 4.5kg',
+        numBoxes: 4800,
+        kgPerBox: 4.5,
+        rateSell: 26000,
+        rateCost: 26400,
+        buyPricePerKg: 8000,
+        sellPricePerBox: 4.9,
+        costBoxPrice: 9310,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 11000,
+        creditNoteUSD: 0
+      },
+
+      // Nhóm Dừa
+      'Diamond': {
+        cat: 'dua',
+        variantLabel: 'Kim Cương (Diamond 9kg)',
+        title: 'Dừa Kim Cương (9kg)',
+        itemName: 'Dừa Diamond Cut',
+        numBoxes: 2325,
+        kgPerBox: 9,
+        rateSell: 26040,
+        rateCost: 26600,
+        buyPricePerKg: 9500,
+        sellPricePerBox: 10.0,
+        costBoxPrice: 13000,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 10500,
+        creditNoteUSD: 0
+      },
+      'Open-easy': {
+        cat: 'dua',
+        variantLabel: 'Nắp Khoen (Easy-Open 9kg)',
+        title: 'Dừa Nắp Khoen (Easy Open)',
+        itemName: 'Dừa Nắp Khoen Easy Open',
+        numBoxes: 2080,
+        kgPerBox: 9,
+        rateSell: 26040,
+        rateCost: 26600,
+        buyPricePerKg: 11500,
+        sellPricePerBox: 11.5,
+        costBoxPrice: 14500,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 10500,
+        creditNoteUSD: 0
+      },
+      'Semi-Husk': {
+        cat: 'dua',
+        variantLabel: 'Dừa Khô Lột Vỏ (25kg)',
+        title: 'Dừa Khô Semi-Husk (25kg)',
+        itemName: 'Dừa Semi-Husked 25kg',
+        numBoxes: 1120,
+        kgPerBox: 25,
+        rateSell: 26000,
+        rateCost: 26600,
+        buyPricePerKg: 9000,
+        sellPricePerBox: 14.0,
+        costBoxPrice: 6500,
+        costDhl: 50,
+        costBank: 50,
+        costPallet: 0,
+        costSeal: 9.45,
+        costThc: 260.77,
+        costBl: 41.57,
+        costTelex: 31.75,
+        costElectricity: 0,
+        costCustoms: 50,
+        costLift: 180,
+        costTrucking: 450,
+        costChiLine: 0,
+        costKdtv: 1151000,
+        costInsurance: 445281,
+        costColdStorage: 0,
+        costOceanFreight: 2500,
+        creditNoteUSD: 0
+      },
+
+      // Nhóm Khác (Chuối)
+      'Banana': {
+        cat: 'khac',
+        variantLabel: 'Chuối Xuất Khẩu (13kg)',
+        title: 'Chuối Xuất Khẩu (13kg)',
+        itemName: 'Chuối Cont 40 RF',
+        numBoxes: 1540,
+        kgPerBox: 13,
+        rateSell: 25780,
+        rateCost: 26400,
+        buyPricePerKg: 10000,
+        sellPricePerBox: 7.5,
+        costBoxPrice: 19440,
+        costDhl: 40.64,
+        costBank: 49,
+        costPallet: 0,
+        costSeal: 9.51,
+        costThc: 262.56,
+        costBl: 41.86,
+        costTelex: 31.96,
+        costElectricity: 0,
+        costCustoms: 19.05,
+        costLift: 104.51,
+        costTrucking: 300,
+        costChiLine: 0,
+        costKdtv: 1351000,
+        costInsurance: 297759,
+        costColdStorage: 0,
+        costOceanFreight: 600,
+        creditNoteUSD: 0
+      }
+    };
+
+    let currentSelectedCategory = 'thanh-long';
+    let currentSelectedPresetKey = 'DF-India';
+    let currentMode = 'forward'; // 'forward' | 'reverse'
+    let chartInstance = null;
+
+    const formatVND = (val) => Math.round(val || 0).toLocaleString('vi-VN') + ' ₫';
+    const formatUSD = (val) => '$' + Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // --- Khởi tạo Giao diện Phân Cấp 2 Tầng ---
+    function initCategoryAndVariants() {
+      const catContainer = document.getElementById('categoryTabs');
+      catContainer.innerHTML = '';
+
+      CATEGORIES.forEach(cat => {
+        const btn = document.createElement('button');
+        const isActive = cat.id === currentSelectedCategory;
+        btn.className = `px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
+          isActive 
+            ? 'bg-slate-900 text-white border-slate-900 shadow-sm' 
+            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+        }`;
+        btn.innerHTML = `<span>${cat.icon}</span> <span>${cat.name}</span> <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-500'}">${cat.count}</span>`;
+        btn.onclick = () => selectCategory(cat.id);
+        catContainer.appendChild(btn);
+      });
+
+      renderVariants();
+    }
+
+    function selectCategory(catId) {
+      currentSelectedCategory = catId;
+      initCategoryAndVariants();
+
+      // Tự động kích hoạt variant đầu tiên thuộc category này
+      const firstPresetKey = Object.keys(PRESETS).find(k => PRESETS[k].cat === catId);
+      if (firstPresetKey) {
+        loadPreset(firstPresetKey);
+      }
+    }
+
+    function renderVariants() {
+      const varContainer = document.getElementById('variantButtons');
+      varContainer.innerHTML = '';
+
+      const matchingKeys = Object.keys(PRESETS).filter(k => PRESETS[k].cat === currentSelectedCategory);
+
+      matchingKeys.forEach(key => {
+        const p = PRESETS[key];
+        const btn = document.createElement('button');
+        const isSelected = key === currentSelectedPresetKey;
+        btn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+          isSelected 
+            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold' 
+            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+        }`;
+        btn.innerText = p.variantLabel;
+        btn.onclick = () => loadPreset(key);
+        varContainer.appendChild(btn);
+      });
+    }
+
+    function loadPreset(key) {
+      currentSelectedPresetKey = key;
+      const p = PRESETS[key];
+      if (!p) return;
+
+      // Cập nhật lại trạng thái active của buttons
+      renderVariants();
+
+      // 3 Biến số chính
+      document.getElementById('buyPricePerKg').value = p.buyPricePerKg;
+      document.getElementById('sellPricePerBox').value = p.sellPricePerBox;
+      document.getElementById('costOceanFreight').value = p.costOceanFreight;
+
+      // Thông tin cont
+      document.getElementById('itemName').value = p.itemName;
+      document.getElementById('numBoxes').value = p.numBoxes;
+      document.getElementById('kgPerBox').value = p.kgPerBox;
+
+      // Bảng cấu hình
+      document.getElementById('rateSell').value = p.rateSell;
+      document.getElementById('rateCost').value = p.rateCost;
+      document.getElementById('costBoxPrice').value = p.costBoxPrice;
+      document.getElementById('activeBoxPriceBadge').innerText = `${p.costBoxPrice.toLocaleString('vi-VN')} ₫/thùng`;
+
+      // Phí cố định
+      document.getElementById('costDhl').value = p.costDhl;
+      document.getElementById('costBank').value = p.costBank;
+      document.getElementById('costPallet').value = p.costPallet;
+      document.getElementById('costSeal').value = p.costSeal;
+      document.getElementById('costThc').value = p.costThc;
+      document.getElementById('costBl').value = p.costBl;
+      document.getElementById('costTelex').value = p.costTelex;
+      document.getElementById('costElectricity').value = p.costElectricity;
+      document.getElementById('costCustoms').value = p.costCustoms;
+      document.getElementById('costLift').value = p.costLift;
+      document.getElementById('costTrucking').value = p.costTrucking;
+      document.getElementById('costChiLine').value = p.costChiLine;
+      document.getElementById('costKdtv').value = p.costKdtv;
+      document.getElementById('costInsurance').value = p.costInsurance;
+      document.getElementById('costColdStorage').value = p.costColdStorage;
+      document.getElementById('creditNoteUSD').value = p.creditNoteUSD;
+
+      calculate();
+    }
+
+    function initBoxPriceTable() {
+      const container = document.getElementById('boxPriceTable');
+      container.innerHTML = '';
+      BOX_PRICE_CATALOG.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'p-2.5 rounded-xl border border-slate-200 hover:border-indigo-400 bg-white hover:bg-indigo-50/30 flex justify-between items-center cursor-pointer transition';
+        div.onclick = () => selectBoxPrice(item.price, item.name);
+        div.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-800 block text-xs">${item.name}</span>
+            <span class="text-[10px] text-slate-400">Quy cách tiêu chuẩn</span>
+          </div>
+          <span class="font-black text-indigo-700 text-xs bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">${item.price.toLocaleString('vi-VN')} ₫</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function selectBoxPrice(price, name) {
+      document.getElementById('costBoxPrice').value = price;
+      document.getElementById('activeBoxPriceBadge').innerText = `${price.toLocaleString('vi-VN')} ₫/thùng`;
+      showToast(`Đã áp dụng giá in: ${name} (${price.toLocaleString('vi-VN')} ₫)`);
+      calculate();
+    }
+
+    function loadPreset(key, clickedBtn) {
+      const p = PRESETS[key];
+      if (!p) return;
+
+      document.querySelectorAll('#presetButtons button').forEach(b => {
+        b.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition border bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200';
+      });
+      if (clickedBtn) {
+        clickedBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition border bg-slate-900 text-white border-slate-900';
+      }
+
+      // 3 Biến số chính
+      document.getElementById('buyPricePerKg').value = p.buyPricePerKg;
+      document.getElementById('sellPricePerBox').value = p.sellPricePerBox;
+      document.getElementById('costOceanFreight').value = p.costOceanFreight;
+
+      // Thông tin cont
+      document.getElementById('itemName').value = p.itemName;
+      document.getElementById('numBoxes').value = p.numBoxes;
+      document.getElementById('kgPerBox').value = p.kgPerBox;
+
+      // Bảng cấu hình
+      document.getElementById('rateSell').value = p.rateSell;
+      document.getElementById('rateCost').value = p.rateCost;
+      document.getElementById('costBoxPrice').value = p.costBoxPrice;
+      document.getElementById('activeBoxPriceBadge').innerText = `${p.costBoxPrice.toLocaleString('vi-VN')} ₫/thùng`;
+
+      // Phí cố định
+      document.getElementById('costDhl').value = p.costDhl;
+      document.getElementById('costBank').value = p.costBank;
+      document.getElementById('costPallet').value = p.costPallet;
+      document.getElementById('costSeal').value = p.costSeal;
+      document.getElementById('costThc').value = p.costThc;
+      document.getElementById('costBl').value = p.costBl;
+      document.getElementById('costTelex').value = p.costTelex;
+      document.getElementById('costElectricity').value = p.costElectricity;
+      document.getElementById('costCustoms').value = p.costCustoms;
+      document.getElementById('costLift').value = p.costLift;
+      document.getElementById('costTrucking').value = p.costTrucking;
+      document.getElementById('costChiLine').value = p.costChiLine;
+      document.getElementById('costKdtv').value = p.costKdtv;
+      document.getElementById('costInsurance').value = p.costInsurance;
+      document.getElementById('costColdStorage').value = p.costColdStorage;
+      document.getElementById('creditNoteUSD').value = p.creditNoteUSD;
+
+      calculate();
+    }
+
+    function setCalcMode(mode) {
+      currentMode = mode;
+      const fBtn = document.getElementById('modeForwardBtn');
+      const rBtn = document.getElementById('modeReverseBtn');
+      const rControl = document.getElementById('reverseMarginControl');
+      const buyPriceInput = document.getElementById('buyPricePerKg');
+      const buyPriceWrapper = document.getElementById('buyPriceWrapper');
+      const buyPriceLockedLabel = document.getElementById('buyPriceLockedLabel');
+      const modeBadge = document.getElementById('calcModeBadge');
+
+      if (mode === 'forward') {
+        if (fBtn) fBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm bg-white text-slate-900 border border-slate-200';
+        if (rBtn) rBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900';
+        if (rControl) rControl.classList.add('hidden');
+        if (buyPriceInput) buyPriceInput.removeAttribute('readonly');
+        if (buyPriceWrapper) buyPriceWrapper.classList.remove('bg-amber-50', 'border-amber-400');
+        if (buyPriceLockedLabel) buyPriceLockedLabel.classList.add('hidden');
+        if (modeBadge) {
+          modeBadge.innerText = 'Nhập nhanh trực tiếp';
+          modeBadge.className = 'text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200';
+        }
+      } else {
+        if (rBtn) rBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm bg-white text-slate-900 border border-slate-200';
+        if (fBtn) fBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900';
+        if (rControl) rControl.classList.remove('hidden');
+        if (buyPriceInput) buyPriceInput.setAttribute('readonly', 'true');
+        if (buyPriceWrapper) buyPriceWrapper.classList.add('bg-amber-50', 'border-amber-400');
+        if (buyPriceLockedLabel) buyPriceLockedLabel.classList.remove('hidden');
+        if (modeBadge) {
+          modeBadge.innerText = 'Tính Ngược (Target Margin)';
+          modeBadge.className = 'text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold border border-amber-300';
+        }
+      }
+      calculate();
+    }
+
+    function toggleCostDetails() {
+      const body = document.getElementById('costDetailsBody');
+      const text = document.getElementById('costToggleText');
+      const icon = document.getElementById('costToggleIcon');
+      if (body) {
+        if (body.classList.contains('hidden')) {
+          body.classList.remove('hidden');
+          if (text) text.innerText = 'Thu Gọn';
+          if (icon) icon.classList.add('rotate-180');
+        } else {
+          body.classList.add('hidden');
+          if (text) text.innerText = 'Xem Chi Tiết';
+          if (icon) icon.classList.remove('rotate-180');
+        }
+      }
+    }
+
+    function openConfigModal() {
+      const modal = document.getElementById('configModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      const modal = document.getElementById('configModal');
+      if (modal) modal.classList.add('hidden');
+      calculate();
+    }
+
+    // Helper gán text an toàn chống lỗi TypeError: Cannot set properties of null
+    function safeSetText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.innerText = text;
+    }
+
+    function safeSetValue(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    }
+
+    function safeGetFloat(id, defaultVal = 0) {
+      const el = document.getElementById(id);
+      return el ? (parseFloat(el.value) || defaultVal) : defaultVal;
+    }
+
+    // --- QUOTATION MODAL & IMAGE EXPORT ENGINE ---
+    function openQuoteModal() {
+      // Đảm bảo chạy tính toán mới nhất trước khi trích xuất
+      calculate();
+
+      // 1. Trích xuất trực tiếp giá trị từ các ô nhập & preset hiện hành
+      const itemEl = document.getElementById('itemName');
+      const itemTitle = (itemEl && itemEl.value.trim() !== '') ? itemEl.value : 'Nông Sản Xuất Khẩu';
+
+      const numBoxes = parseFloat(document.getElementById('numBoxes')?.value) || 0;
+      const kgPerBox = parseFloat(document.getElementById('kgPerBox')?.value) || 0;
+      const totalKg = numBoxes * kgPerBox;
+      const unitPriceUSD = parseFloat(document.getElementById('sellPricePerBox')?.value) || 0;
+      const oceanFreight = parseFloat(document.getElementById('costOceanFreight')?.value) || 0;
+      const creditNote = parseFloat(document.getElementById('creditNoteUSD')?.value) || 0;
+      
+      const totalRevenueUSD = (unitPriceUSD * numBoxes) - creditNote;
+
+      // Cập nhật thông tin hàng hóa & quy cách đóng gói
+      safeSetText('quoteItemTitle', itemTitle);
+      safeSetText('quotePackaging', `Carton ${kgPerBox > 0 ? kgPerBox : 'Standard'} kg`);
+      safeSetText('quoteBoxes', `${numBoxes.toLocaleString('en-US')} boxes`);
+      safeSetText('quoteNetWeight', `${totalKg.toLocaleString('en-US')} kg`);
+      safeSetText('quoteUnitPrice', `$${unitPriceUSD.toFixed(2)} / box`);
+      safeSetText('quoteFreightDisplay', `$${oceanFreight.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      safeSetText('quoteGrandTotal', `$${totalRevenueUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+      // Cập nhật điểm đến & điều kiện Incoterm phù hợp
+      let destPort = 'Main Seaport (C&F / FOB)';
+      let tempCondition = '+3°C to +5°C, Ventilation 15 CBM';
+
+      if (currentSelectedPresetKey === 'DF-India') {
+        destPort = 'Nhava Sheva / Mundra Port, India (CNF)';
+      } else if (currentSelectedPresetKey === 'DF-HK') {
+        destPort = 'Hong Kong Port (CNF)';
+      } else if (currentSelectedPresetKey === 'DF-DB' || currentSelectedPresetKey === 'DF-Pallet') {
+        destPort = 'Jebel Ali Port, UAE (CNF)';
+      } else if (currentSelectedPresetKey.includes('Chanh')) {
+        destPort = 'Port Klang, Malaysia / Middle East Port (CNF)';
+        tempCondition = '+5°C to +7°C, Ventilation 15 CBM';
+      } else if (currentSelectedPresetKey === 'Banana') {
+        destPort = 'Dalian / Qingdao / Middle East Port (CNF)';
+        tempCondition = '+13°C to +13.5°C, Ventilation 25 CBM';
+      }
+
+      safeSetText('quoteDestination', destPort);
+      safeSetText('quoteTempCondition', tempCondition);
+      safeSetText('quoteIncoterm', oceanFreight > 0 ? 'CNF / CIF Destination Port' : 'FOB Ho Chi Minh Port, Vietnam');
+
+      // Tạo mã số và ngày lập báo giá
+      const now = new Date();
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const dateStr = `${monthNames[now.getMonth()]} ${String(now.getDate()).padStart(2, '0')}, ${now.getFullYear()}`;
+      safeSetText('quoteDate', dateStr);
+      safeSetText('quoteRefNo', `PLX-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}-${String(Math.floor(Math.random()*900)+100)}`);
+
+      // Mở modal
+      const modal = document.getElementById('quoteModal');
+      if (modal) modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeQuoteModal() {
+      const modal = document.getElementById('quoteModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function exportQuotationImage() {
+      const quoteElement = document.getElementById('quotationCard');
+      const btnText = document.getElementById('btnExportText');
+      const btn = document.getElementById('downloadImageBtn');
+
+      if (!quoteElement) return;
+
+      try {
+        if (btnText) btnText.innerText = 'Đang Tạo Ảnh...';
+        if (btn) btn.disabled = true;
+
+        // Render card thành Canvas độ nét cao (scale 2 cho màn hình Retina/High-DPI)
+        const canvas = await html2canvas(quoteElement, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        // Xuất ra dạng link tải ảnh PNG
+        const imageUri = canvas.toDataURL('image/png');
+        const itemName = (document.getElementById('itemName')?.value || 'Bao_Gia').replace(/\s+/g, '_');
+        const fileName = `Bao_Gia_${itemName}_${new Date().toISOString().slice(0, 10)}.png`;
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = imageUri;
+        downloadLink.download = fileName;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        showToast('Đã xuất file ảnh Báo Giá thành công!');
+      } catch (err) {
+        console.error('Lỗi xuất ảnh quote:', err);
+        showToast('Có lỗi xảy ra khi tạo ảnh, vui lòng thử lại!');
+      } finally {
+        if (btnText) btnText.innerText = 'Tải Ảnh PNG Gửi Khách';
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // --- LOGIC TÍNH TOÁN THEO 1. SEA PRICE.XLSX ---
+    function calculate() {
+      // 1. Thông số cont
+      const numBoxes = Math.max(1, safeGetFloat('numBoxes', 1));
+      const kgPerBox = Math.max(0.1, safeGetFloat('kgPerBox', 1));
+      const totalKg = numBoxes * kgPerBox;
+      
+      const totalKgDisplay = document.getElementById('totalKgDisplay');
+      if (totalKgDisplay) {
+        totalKgDisplay.innerHTML = `<span>${totalKg.toLocaleString('vi-VN')}</span><span class="text-[10px] text-slate-400">KG</span>`;
+      }
+
+      // 2. Tỷ giá kép
+      const rateSell = safeGetFloat('rateSell', 25600);
+      const rateCost = safeGetFloat('rateCost', 26300);
+
+      // 3. Chi phí làm hàng cố định
+      const costBoxPrice = safeGetFloat('costBoxPrice', 0);
+      const costDhl = safeGetFloat('costDhl', 0);
+      const costBank = safeGetFloat('costBank', 0);
+      const costPallet = safeGetFloat('costPallet', 0);
+
+      const totalPrintingVND = costBoxPrice * numBoxes;
+      const subtotalGroupAVND = (costDhl + costBank) * rateCost + totalPrintingVND + costPallet;
+
+      const costSeal = safeGetFloat('costSeal', 0);
+      const costThc = safeGetFloat('costThc', 0);
+      const costBl = safeGetFloat('costBl', 0);
+      const costTelex = safeGetFloat('costTelex', 0);
+      const costElectricity = safeGetFloat('costElectricity', 0);
+      const subtotalGroupB_USD = (costSeal + costThc + costBl + costTelex + costElectricity) * 1.08;
+      const subtotalGroupBVND = subtotalGroupB_USD * rateCost;
+
+      const costCustoms = safeGetFloat('costCustoms', 0);
+      const costLift = safeGetFloat('costLift', 0);
+      const costTrucking = safeGetFloat('costTrucking', 0);
+      const costChiLine = safeGetFloat('costChiLine', 0);
+      const costKdtv = safeGetFloat('costKdtv', 0);
+      const costInsurance = safeGetFloat('costInsurance', 0);
+      const costColdStorage = safeGetFloat('costColdStorage', 0);
+
+      const subtotalGroupC_USD_taxable = (costCustoms + costLift + costTrucking + costChiLine) * 1.08;
+      const subtotalGroupCVND = subtotalGroupC_USD_taxable * rateCost + costKdtv + costInsurance + costColdStorage;
+
+      // ⭐ BIẾN SỐ 3: CƯỚC TÀU
+      const costOceanFreight = safeGetFloat('costOceanFreight', 0);
+      const creditNoteUSD = safeGetFloat('creditNoteUSD', 0);
+      const subtotalGroupDVND = costOceanFreight * rateCost;
+
+      // Tổng CP làm hàng
+      const totalOpsCostVND = subtotalGroupAVND + subtotalGroupBVND + subtotalGroupCVND + subtotalGroupDVND;
+
+      safeSetText('subtotalGroupAVND', formatVND(subtotalGroupAVND));
+      safeSetText('subtotalGroupBVND', formatVND(subtotalGroupBVND));
+      safeSetText('subtotalGroupCVND', formatVND(subtotalGroupCVND));
+      safeSetText('subtotalGroupDVND', formatVND(subtotalGroupDVND));
+
+      // ⭐ BIẾN SỐ 1 & 2: GIÁ MUA VÀ GIÁ BÁN
+      let buyPricePerKg = safeGetFloat('buyPricePerKg', 0);
+      let sellPricePerBox = safeGetFloat('sellPricePerBox', 0);
+
+      // --- LOGIC TÍNH NGƯỢC (REVERSE PRICING) ---
+      if (currentMode === 'reverse') {
+        const targetMarginPct = safeGetFloat('targetMarginRange', 8.37);
+        safeSetText('targetMarginValueDisplay', targetMarginPct.toFixed(2) + '%');
+        const targetMargin = targetMarginPct / 100;
+
+        const totalRevVND = (sellPricePerBox * numBoxes - creditNoteUSD) * rateSell;
+        const allowedTotalCostVND = totalRevVND / (1 + targetMargin);
+        const allowedRawMaterialVND = Math.max(0, allowedTotalCostVND - totalOpsCostVND);
+        buyPricePerKg = totalKg > 0 ? (allowedRawMaterialVND / totalKg) : 0;
+        safeSetValue('buyPricePerKg', Math.round(buyPricePerKg));
+      }
+
+      // --- P&L WATERFALL THEO BẢNG EXCEL ---
+      const totalRawMaterialVND = buyPricePerKg * totalKg;
+      const totalInputCostVND = totalOpsCostVND + totalRawMaterialVND;
+
+      const revenueUSD = sellPricePerBox * numBoxes - creditNoteUSD;
+      const revenueVND = revenueUSD * rateSell;
+
+      const grossProfitVND = revenueVND - totalInputCostVND;
+      const grossMarginPct = totalInputCostVND > 0 ? (grossProfitVND / totalInputCostVND) * 100 : 0;
+
+      // Lãi vay NH (5%/12 tháng)
+      const interestRateYear = safeGetFloat('interestRateYear', 5.0);
+      const bankInterestVND = totalInputCostVND * (interestRateYear / 100) / 12;
+
+      const remainingProfitVND = grossProfitVND - bankInterestVND;
+
+      // Hoa hồng cố định: Sale 10%, Thu mua 3%
+      const commissionSaleRate = safeGetFloat('commissionSaleRate', 10.0);
+      const commissionProcureRate = safeGetFloat('commissionProcureRate', 3.0);
+
+      const commissionSaleVND = remainingProfitVND > 0 ? remainingProfitVND * (commissionSaleRate / 100) : 0;
+      const commissionProcureVND = remainingProfitVND > 0 ? remainingProfitVND * (commissionProcureRate / 100) : 0;
+
+      const saleCapitalContribution = safeGetFloat('saleCapitalContribution', 0);
+      const saleInvestRatio = totalInputCostVND > 0 ? (saleCapitalContribution / totalInputCostVND) : 0;
+      const saleInvestProfitVND = (remainingProfitVND - commissionSaleVND - commissionProcureVND) * saleInvestRatio;
+
+      const finalNetProfitVND = remainingProfitVND - commissionSaleVND - commissionProcureVND - saleInvestProfitVND;
+      const finalNetProfitUSD = rateSell > 0 ? finalNetProfitVND / rateSell : 0;
+
+      // Card lớn hiển thị Lợi nhuận trước trừ Hoa hồng (Remaining Profit)
+      const preCommissionProfitUSD = rateSell > 0 ? remainingProfitVND / rateSell : 0;
+
+      // --- CẬP NHẬT GIAO DIỆN ---
+      safeSetText('totalRawMaterialVND', formatVND(totalRawMaterialVND));
+      safeSetText('totalRevenueUSD', formatUSD(revenueUSD));
+      safeSetText('totalRevenueVND', formatVND(revenueVND));
+
+      // Hiển thị Lợi nhuận trước trừ Hoa Hồng ở Card lớn
+      safeSetText('finalProfitVND', Math.round(remainingProfitVND).toLocaleString('vi-VN'));
+      safeSetText('finalProfitUSD', formatUSD(preCommissionProfitUSD));
+      safeSetText('afterCommissionVND', formatVND(finalNetProfitVND));
+      safeSetText('profitMarginBadge', `Margin: ${grossMarginPct.toFixed(2)}%`);
+      safeSetText('totalInputCostVND', formatVND(totalInputCostVND));
+      safeSetText('fobPriceVND', formatVND(revenueVND));
+
+      // P&L Waterfall Table
+      safeSetText('rowRawMaterial', formatVND(totalRawMaterialVND));
+      safeSetText('rowOpsCost', formatVND(totalOpsCostVND));
+      safeSetText('rowTotalCost', formatVND(totalInputCostVND));
+      safeSetText('rowRevenue', formatVND(revenueVND));
+      safeSetText('rowGrossProfit', formatVND(grossProfitVND));
+      safeSetText('rowBankInterest', '-' + formatVND(bankInterestVND));
+      safeSetText('rowRemainingProfit', formatVND(remainingProfitVND));
+      safeSetText('rowCommissionSale', '-' + formatVND(commissionSaleVND));
+      safeSetText('rowCommissionProcure', '-' + formatVND(commissionProcureVND));
+
+      const saleInvestRow = document.getElementById('rowSaleInvestRow');
+      if (saleInvestRow) {
+        if (saleCapitalContribution > 0) {
+          saleInvestRow.classList.remove('hidden');
+          safeSetText('rowSaleInvestVal', '-' + formatVND(saleInvestProfitVND));
+        } else {
+          saleInvestRow.classList.add('hidden');
+        }
+      }
+      safeSetText('rowFinalNetProfit', formatVND(finalNetProfitVND));
+
+      // Cập nhật biểu đồ tròn
+      updateChart(totalRawMaterialVND, totalPrintingVND, subtotalGroupBVND + subtotalGroupCVND, subtotalGroupDVND, Math.max(0, finalNetProfitVND));
+    }
+
+    function updateChart(rawMat, printing, localLogs, freight, profit) {
+      const chartEl = document.getElementById('costBreakdownChart');
+      if (!chartEl) return;
+      const ctx = chartEl.getContext('2d');
+      const data = [rawMat, printing, localLogs, freight, profit];
+      const labels = ['Tiền Hàng Vựa', 'Bao Bì Thùng', 'Local Charges & Hải Quan', 'Cước Biển RF', 'LN Cty'];
+
+      if (chartInstance) {
+        chartInstance.data.datasets[0].data = data;
+        chartInstance.update();
+        return;
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#10b981', '#6366f1', '#f59e0b', '#ef4444', '#0284c7'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                font: { size: 10, family: "'Plus Jakarta Sans', sans-serif" },
+                padding: 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed || 0;
+                  return ' ' + context.label + ': ' + Math.round(val).toLocaleString('vi-VN') + ' ₫';
+                }
+              }
+            }
+          },
+          cutout: '68%'
+        }
+      });
+    }
+
+    function copySummary() {
+      const item = document.getElementById('itemName')?.value || '';
+      const numBoxes = document.getElementById('numBoxes')?.value || '';
+      const kgBox = document.getElementById('kgPerBox')?.value || '';
+      const buyPrice = document.getElementById('buyPricePerKg')?.value || '';
+      const sellPrice = document.getElementById('sellPricePerBox')?.value || '';
+      const freight = document.getElementById('costOceanFreight')?.value || '';
+      const preCommissionProfit = document.getElementById('finalProfitVND')?.innerText || '0';
+      const netProfit = document.getElementById('afterCommissionVND')?.innerText || '0';
+      const margin = document.getElementById('profitMarginBadge')?.innerText || '';
+
+      const text = `📋 [BÁO GIÁ XUẤT KHẨU CONT 40' RF]
+- Mặt hàng: ${item}
+- Quy cách: ${numBoxes} thùng (${kgBox} kg/thùng)
+- Giá mua tại vựa: ${Number(buyPrice).toLocaleString('vi-VN')} ₫/kg
+- Giá bán đề xuất: $${sellPrice} / thùng
+- Cước tàu biển: $${freight} / cont
+- ${margin}
+- Lợi nhuận trước hoa hồng: ${preCommissionProfit} ₫
+- Lợi nhuận sau hoa hồng (Cty): ${netProfit}
+---------------------------------`;
+
+      const dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = text;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+
+      showToast('Đã sao chép tóm tắt lô hàng vào clipboard!');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMsg');
+      if (!t || !msgEl) return;
+      msgEl.innerText = msg;
+      t.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        t.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Xử lý khi tải file ảnh Logo Phulimex lên trực tiếp từ máy tính/điện thoại
+    function handleLogoUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const logoImg = document.getElementById('quoteLogoImg');
+        const fallback = document.getElementById('quoteLogoFallback');
+        if (logoImg) {
+          logoImg.src = e.target.result;
+          logoImg.classList.remove('hidden');
+        }
+        if (fallback) fallback.classList.add('hidden');
+        showToast('Đã tải và áp dụng logo Phulimex thành công!');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleLogoError(img) {
+      // Nếu URL ngoài bị lỗi thì chuyển sang vector fallback nhận diện cao cấp
+      img.classList.add('hidden');
+      const fallback = document.getElementById('quoteLogoFallback');
+      if (fallback) fallback.classList.remove('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      initCategoryAndVariants();
+      initBoxPriceTable();
+
+      // Chỉ lắng nghe input từ 3 biến số chính và cấu hình
+      const activeInputs = [
+        'buyPricePerKg', 'sellPricePerBox', 'costOceanFreight',
+        'rateSell', 'rateCost', 'costBoxPrice', 'targetMarginRange',
+        'numBoxes', 'kgPerBox', 'itemName'
+      ];
+
+      activeInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calculate);
+      });
+
+      calculate();
+    });
+  </script>
+</body>
+</html>
